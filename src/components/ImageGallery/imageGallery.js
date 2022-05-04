@@ -1,92 +1,81 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import s from './ImageGalery.module.css';
 import Loader from '../Loader/loader';
 import Button from '../Button/button';
-
+import fechApi from '../fech/fech';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 
-class ImageGallery extends Component {
+const st = {
+  IDLE: 'idle',
+  PENDING: 'pending',
+  RESOLVED: 'resolved',
+  REJECTED: 'rejected',
+};
+const PAGE = 1;
+
+export default class ImageGallery extends Component {
   state = {
-    cards: [],
-    cardsAll: [],
-    status: 'idle',
-    page: 1,
+    status: st.IDLE,
+    urlList: [],
+    page: PAGE,
+    total: '',
   };
 
   componentDidUpdate(prevProps, prevState) {
     const { value } = this.props;
     const { page } = this.state;
 
-    if (prevProps.value !== value) {
-      this.setState({ status: 'pending', page: 1, cardsAll: [] });
-      this.fechApi(value, page);
+    if (prevProps.value !== value || prevState.page !== page) {
+      this.renderList();
     }
-    if (prevProps.value === value && prevState.page !== page) {
-      this.fechApi(value, page);
+
+    if (prevProps.value !== value) {
+      this.setState({ urlList: [], page: PAGE });
     }
   }
 
   onLoadMore = () => {
-    this.setState(prevS => {
-      const incremetPage = 1;
-      return { page: prevS.page + incremetPage };
+    const increment = 1;
+    this.setState(preS => ({ page: preS.page + increment }));
+  };
+
+  renderList = () => {
+    this.setState({ status: st.PENDING });
+    const { page } = this.state;
+    const { value } = this.props;
+
+    fechApi(value, page).then(res => {
+      this.setState(preS => ({ urlList: [...preS.urlList, ...res.hits] }));
+      this.setState({ status: st.RESOLVED });
+      this.setState({ total: res.total });
+      if (res.hits.length === 0) {
+        this.setState({ status: st.REJECTED });
+      }
     });
   };
 
-  fechApi(value, page) {
-    const KEY = '26773095-8033af7b4c44df434cdac5aab';
-    const per_page = 12;
-
-    axios
-      .get(
-        `https://pixabay.com/api/?q=${value}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=${per_page}`,
-      )
-      .then(res => this.renderCards(res))
-      .catch(error => console.log(error));
-  }
-
-  renderCards = res => {
-    const cards = res.data.hits;
-    if (cards.length === 0) {
-      return this.setState({ status: 'rejected' });
-    } else {
-      return this.setState(preS => {
-        const cardsAll = [...preS.cardsAll, ...cards];
-        return { cards, cardsAll, status: 'resolved' };
-      });
-    }
-  };
-
+  // ******** JSX ********************
   render() {
-    const { cards, cardsAll, status } = this.state;
-    if (status === 'idle') {
-      return <h1>Введіть запит пошуку.</h1>;
-    }
-    if (status === 'pending') {
-      return <Loader />;
-    }
-    if (status === 'resolved') {
-      return (
-        <div>
-          <ul className={s.galery}>
-            {cardsAll.map(el => (
-              <ImageGalleryItem
-                key={el.id}
-                webformatURL={el.webformatURL}
-                largeImageURL={el.largeImageURL}
-                tags={el.tags}
-              />
-            ))}
-          </ul>
-          {cards.length === 12 && <Button onClick={this.onLoadMore} />}
-        </div>
-      );
-    }
-    if (status === 'rejected') {
-      return <h1>Результат запиту не знайдений!</h1>;
-    }
+    const { status, urlList, total } = this.state;
+    return (
+      <div>
+        {status === 'idle' && <h1>Введіть запит пошуку.</h1>}
+
+        <ul className={s.galery}>
+          {urlList.map(el => (
+            <ImageGalleryItem
+              key={el.id}
+              webformatURL={el.webformatURL}
+              largeImageURL={el.largeImageURL}
+              tags={el.tags}
+            />
+          ))}
+        </ul>
+
+        {status === 'resolved' && total !== urlList.length && <Button onClick={this.onLoadMore} />}
+        {status === 'pending' && <Loader />}
+        {status === 'rejected' && <h1>Результат запиту не знайдений!</h1>}
+      </div>
+    );
   }
 }
-
-export default ImageGallery;
