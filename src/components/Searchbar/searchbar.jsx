@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { FiSearch } from 'react-icons/fi';
+
 import s from './searchbar.module.css';
 
 class Searchbar extends Component {
@@ -53,3 +55,5 @@ class Searchbar extends Component {
 }
 
 export default Searchbar;
+
+Searchbar.propTypes = { onSubmit: PropTypes.func.isRequired };

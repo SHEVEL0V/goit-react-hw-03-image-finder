@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
 import s from './ImageGalery.module.css';
 import Loader from '../Loader/loader';
 import Button from '../Button/button';
@@ -79,3 +81,7 @@ export default class ImageGallery extends Component {
     );
   }
 }
+
+ImageGallery.propTypes = {
+  value: PropTypes.string.isRequired,
+};
