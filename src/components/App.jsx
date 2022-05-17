@@ -46,12 +46,21 @@ export default class App extends Component {
     const { page, valueInput } = this.state;
 
     fechApi(valueInput, page).then(res => {
-      this.setState(preS => ({ data: [...preS.data, ...res.hits] }));
-      this.setState({ status: st.RESOLVED });
-      this.setState({ total: res.total });
       if (res.hits.length === 0) {
-        this.setState({ status: st.REJECTED });
+        return this.setState({ status: st.REJECTED });
       }
+
+      const filtreData = res.hits.map(
+        ({ id, webformatURL, largeImageURL, tags }) => {
+          return { id, webformatURL, largeImageURL, tags };
+        }
+      );
+
+      this.setState(preS => ({
+        data: [...preS.data, ...filtreData],
+        status: st.RESOLVED,
+        total: res.total,
+      }));
     });
   };
 
