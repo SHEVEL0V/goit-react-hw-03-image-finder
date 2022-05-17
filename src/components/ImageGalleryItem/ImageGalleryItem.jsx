@@ -5,7 +5,7 @@ import Modal from '../Modal/modal';
 
 export default class ImageGalleryItem extends Component {
   state = {
-    showModat: true,
+    showModat: false,
   };
 
   onModal = () => {
@@ -16,19 +16,19 @@ export default class ImageGalleryItem extends Component {
 
   render() {
     const { webformatURL, largeImageURL, tags } = this.props;
-    if (this.state.showModat) {
-      return (
+    return (
+      <>
         <li onClick={this.onModal} className={s.item}>
           <img className={s.img} src={webformatURL} alt={tags} />
         </li>
-      );
-    } else {
-      return (
-        <Modal onClose={this.onModal}>
-          <img src={largeImageURL} alt={tags} />
-        </Modal>
-      );
-    }
+
+        {this.state.showModat && (
+          <Modal onClose={this.onModal}>
+            <img src={largeImageURL} alt={tags} />
+          </Modal>
+        )}
+      </>
+    );
   }
 }
 
